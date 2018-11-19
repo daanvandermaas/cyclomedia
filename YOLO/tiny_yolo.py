@@ -1,3 +1,4 @@
+# First part creates the uncompiled yolo model
 #from keras.optimizers import SGD, Adam, RMSprop
 #from keras.models import Model
 #from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
@@ -55,6 +56,8 @@
 #optimizer = Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 #model.save('uncompiled_tiny_yolo_2.h5')
 
+
+# --------- Second Part loads the tiny yolo weights and does prediction on test imaga
 from keras.models import load_model
 import numpy as np
 import matplotlib.pyplot as plt
