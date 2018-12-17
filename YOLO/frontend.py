@@ -10,7 +10,7 @@ from keras.applications.mobilenet import MobileNet
 from keras.layers.merge import concatenate
 from keras.optimizers import SGD, Adam, RMSprop
 from preprocessing import BatchGenerator
-from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard,ReduceLROnPlateau,CSVLogger
 from backend import TinyYoloFeature, FullYoloFeature, MobileNetFeature, SqueezeNetFeature, Inception3Feature, VGG16Feature, ResNet50Feature
 
 class YOLO(object):
@@ -299,7 +299,7 @@ class YOLO(object):
         ############################################
 
         optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-        self.model.save('uncompiled_tiny_yolo.h5')
+        #self.model.save('uncompiled_tiny_yolo.h5')
         self.model.compile(loss=self.custom_loss, optimizer=optimizer)
 
         ############################################
@@ -307,8 +307,8 @@ class YOLO(object):
         ############################################
 
         early_stop = EarlyStopping(monitor='val_loss', 
-                           min_delta=0.001, 
-                           patience=50, 
+                           min_delta=0.0001, 
+                           patience=12, 
                            mode='min', 
                            verbose=1)
         checkpoint = ModelCheckpoint(saved_weights_name, 
@@ -324,12 +324,15 @@ class YOLO(object):
                                      save_weights_only=False,
                                      mode='min', 
                                      period=1)
-        tensorboard = TensorBoard(log_dir=os.path.expanduser('~/logs/'), 
+        tensorboard = TensorBoard(log_dir='/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO/logs', 
                                   histogram_freq=0, 
                                   #write_batch_performance=True,
                                   write_graph=True, 
                                   write_images=False)
-
+        ReduceLR = ReduceLROnPlateau(monitor='val_loss', 
+                                  factor=0.1, 
+                                  patience=5) 
+        csvlogger = CSVLogger('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO/logs/%s' %(saved_weights_name.replace('h5','csv')), separator=',', append=False)
         ############################################
         # Start the training process
         ############################################        
@@ -341,7 +344,7 @@ class YOLO(object):
                                  validation_data  = valid_generator,
                                  validation_steps = len(valid_generator) * valid_times,
 #                                 callbacks        = [checkpoint, tensorboard], 
-                                 callbacks        = [early_stop, checkpoint, tensorboard,checkpoint2], 
+                                 callbacks        = [early_stop, checkpoint,checkpoint2,ReduceLR,csvlogger], 
                                  workers          = 3,
                                  max_queue_size   = 8)      
 
@@ -354,12 +357,16 @@ class YOLO(object):
         for label, average_precision in average_precisions.items():
             print(self.labels[label], '{:.4f}'.format(average_precision))
         print('mAP: {:.4f}'.format(sum(average_precisions.values()) / len(average_precisions)))         
-
+        logfile = '/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO/logs/%s' %(saved_weights_name.replace('h5','txt'))
+        with open(logfile, "w") as text_file:
+            print('mAP: {:.4f}'.format(sum(average_precisions.values()) / len(average_precisions)), file=text_file)
+            for label, average_precision in average_precisions.items():
+                print(self.labels[label], '{:.4f}'.format(average_precision), file=text_file)
     def evaluate(self, 
                  generator, 
                  iou_threshold=0.1,
-                 score_threshold=0.1,
-                 max_detections=100,
+                 score_threshold=0.4,
+                 max_detections=10,
                  save_path=None):
         """ Evaluate a given dataset using a given model.
         code originally from https://github.com/fizyr/keras-retinanet
@@ -455,9 +462,12 @@ class YOLO(object):
             true_positives  = true_positives[indices]
 
             # compute false positives and true positives
+            FP_sum = np.sum(false_positives)
+            TP_sum = np.sum(true_positives)
             false_positives = np.cumsum(false_positives)
             true_positives  = np.cumsum(true_positives)
-
+            print(label,'False positives: ',FP_sum,'True positives: ',TP_sum)
+            
             # compute recall and precision
             recall    = true_positives / num_annotations
             precision = true_positives / np.maximum(true_positives + false_positives, np.finfo(np.float64).eps)

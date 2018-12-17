@@ -31,10 +31,16 @@ argparser.add_argument(
     '--input',
     help='path to a dir with images')
 
+argparser.add_argument(
+    '-r',
+    '--runID',
+    help='runID')
+
 def _main_(args):
     config_path  = args.conf
     weights_path = args.weights
     image_path   = args.input
+    runID   = args.runID
 
     with open(config_path) as config_buffer:    
         config = json.load(config_buffer)
@@ -58,22 +64,28 @@ def _main_(args):
     ###############################
     #   Predict bounding boxes 
     ###############################
-
+    outputdir = os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO/false_positives_dir',runID)
+    if os.path.exists(outputdir):
+        print('path exists')
+    else:
+        os.makedirs(outputdir)
     print(image_path)
     imlist = os.listdir(image_path)
-    print(imlist)
+    print(len(imlist))
     for file in imlist:
         if file.endswith('jpg'):
             print(file)
-            image = cv2.imread(os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO',image_path,file))
+            image = cv2.imread(os.path.join(image_path,file))
             boxes = yolo.predict(image)
             image = draw_boxes(image, boxes, config['model']['labels'])
             print(len(boxes), 'boxes are found')
-            filename = file[:-4] + '_detected' + file[-4:]
-            output = os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO',image_path,'output',filename)
-            print(output)
-            cv2.imwrite(output,image)
-
+            if len(boxes)>0:
+                filename = file[:-4] + '_detected' + file[-4:]
+                output = os.path.join(outputdir,filename)
+                print(output)
+                cv2.imwrite(output,image)
+#                command = 'cp %s %s' %(os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/BirdsAI_random/to_test/',file),os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/BirdsAI_random/tested_with_boxes/',file))
+#                os.system(command)
 if __name__ == '__main__':
     args = argparser.parse_args()
     _main_(args)

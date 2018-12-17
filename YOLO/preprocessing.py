@@ -52,7 +52,7 @@ def parse_annotation(ann_dir, img_dir, labels=[]):
                             if 'ymax' in dim.tag:
                                 obj['ymax'] = int(round(float(dim.text)))
 
-        if len(img['object']) > 0:
+        if len(img['object']) >= 0:
             all_imgs += [img]
                         
     return all_imgs, seen_labels
@@ -88,13 +88,13 @@ class BatchGenerator(Sequence):
                 #iaa.Flipud(0.2), # vertically flip 20% of all images
                 #sometimes(iaa.Crop(percent=(0, 0.1))), # crop images by 0-10% of their height/width
                 sometimes(iaa.Affine(
-                    #scale={"x": (0.8, 1.2), "y": (0.8, 1.2)}, # scale images to 80-120% of their size, individually per axis
-                    #translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)}, # translate by -20 to +20 percent (per axis)
-                    #rotate=(-5, 5), # rotate by -45 to +45 degrees
-                    #shear=(-5, 5), # shear by -16 to +16 degrees
-                    #order=[0, 1], # use nearest neighbour or bilinear interpolation (fast)
-                    #cval=(0, 255), # if mode is constant, use a cval between 0 and 255
-                    #mode=ia.ALL # use any of scikit-image's warping modes (see 2nd image from the top for examples)
+                  # scale={"x": (0.8, 1.2), "y": (0.8, 1.2)}, # scale images to 80-120% of their size, individually per axis
+                  # translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)}, # translate by -10 to +10 percent (per axis)
+                  # rotate=(-15, 15), # rotate by -15 to +15 degrees
+                  # shear=(-5, 5), # shear by -16 to +16 degrees
+                  # #order=[0, 1], # use nearest neighbour or bilinear interpolation (fast)
+                  # #cval=(0, 255), # if mode is constant, use a cval between 0 and 255
+                  # mode='reflect' # use any of scikit-image's warping modes (see 2nd image from the top for examples)
                 )),
                 # execute 0 to 5 of the following (less important) augmenters per image
                 # don't execute all of them, as that would often be way too strong
@@ -272,8 +272,8 @@ class BatchGenerator(Sequence):
             image = image[offy : (offy + h), offx : (offx + w)]
 
             ### flip the image
-            flip = np.random.binomial(1, .5)
-            if flip > 0.5: image = cv2.flip(image, 1)
+            #flip = np.random.binomial(1, .5)
+            #if flip > 0.5: image = cv2.flip(image, 1)
                 
             image = self.aug_pipe.augment_image(image)            
             
@@ -295,9 +295,9 @@ class BatchGenerator(Sequence):
                 obj[attr] = int(obj[attr] * float(self.config['IMAGE_H']) / h)
                 obj[attr] = max(min(obj[attr], self.config['IMAGE_H']), 0)
 
-            if jitter and flip > 0.5:
-                xmin = obj['xmin']
-                obj['xmin'] = self.config['IMAGE_W'] - obj['xmax']
-                obj['xmax'] = self.config['IMAGE_W'] - xmin
+          #  if jitter and flip > 0.5:
+          #      xmin = obj['xmin']
+          #      obj['xmin'] = self.config['IMAGE_W'] - obj['xmax']
+          #      obj['xmax'] = self.config['IMAGE_W'] - xmin
                 
         return image, all_objs
