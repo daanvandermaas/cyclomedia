@@ -30,7 +30,7 @@ figure_url = baseurl+EPSG+'/%s/%s'+width+height+hfov+index+apiKey
 # Import pandas pointdataframe
 pointdf = pd.read_csv(str(path / input_name_pointf_csv), index_col=0,encoding = 'utf-8')
 # pointdf = pointdf.sample(frac=1)
-# pointdf = pointdf[1487:1488]
+# pointdf = pointdf[:1]
 print(pointdf)
 
 # Create points 15 meters from certain point.

@@ -11,7 +11,7 @@ import variables
 
 # Variable list:
 path = Path(variables.mainpath) # Main directory
-input_name_pointf_csv = variables.output_name_pointf_csv # Ouput from script 01
+input_name_pointf_csv = 'latlon.csv' #variables.output_name_pointf_csv # Ouput from script 01
 downloadDir = path / variables.cyclo_downloadDir
 
 # Cyclomedia url variables
@@ -33,6 +33,8 @@ print(pointdf)
 # Define multiprocessing function
 def download_cycloramas(lon,lat,xml_url,figure_url,downloadDir):
     url = xml_url %(lon,lat,0)
+    print(url)
+    sys.exit()
     try:
         r=requests.get(url, auth=(variables.cyclo_username,variables.cyclo_pw))
         assert r.status_code==200
