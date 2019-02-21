@@ -75,9 +75,9 @@ def writebbox2xml(output,outputDir,file):
 
 path = Path('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/')
 
-labelpath = path / 'BirdsAI/labels'
-imgpath = path / 'downloaded_panoramas_shapefile/met_bord'
-outputpath = path / 'BirdsAI/outputdir_zonderbord'
+labelpath = path / 'BirdsAI_falsepositives/labels'
+imgpath = path / 'BirdsAI_falsepositives/need_labeling'
+outputpath = path / 'BirdsAI_falsepositives/outputdir'
 classes = variables.classes_nr
 classes_names = variables.classes_names
 
@@ -90,7 +90,7 @@ def process_files(file,labelpath,imgpath,outputpath,classes,classes_names):
         try:    
             img = plt.imread(str(imgpath / file.replace('.txt','.jpg')))
             #plt.imsave(str(outputpath / file.replace('.txt','.jpg' )),np.rint(img).astype(np.uint8))
-            if np.mean(mask) == 0: # foto's met borden (dus als alle pixels als 0 zijn geclassificeerd)
+            if np.mean(mask) >= 0: # foto's met borden (dus als alle pixels als 0 zijn geclassificeerd)
                 img = plt.imread(str(imgpath / file.replace('.txt','.jpg')))
                 
                 # -- Normal orientation
