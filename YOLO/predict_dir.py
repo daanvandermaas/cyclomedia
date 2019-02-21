@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 from preprocessing import parse_annotation
-from utils import draw_boxes
+from utils import draw_boxes,BoundBox
 from frontend import YOLO
 import json
 
@@ -72,8 +72,20 @@ def _main_(args):
             filename = file[:-4] + '_detected' + file[-4:]
             output = os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO',image_path,'output',filename)
             print(output)
-            cv2.imwrite(output,image)
-
+            if len(boxes)>0:
+                cv2.imwrite(output,image)
+            temp_labels=config['model']['labels']
+            for box in boxes:
+                xmin = int(box.xmin*1024)
+                ymin = int(box.ymin*512)
+                xmax = int(box.xmax*1024)
+                ymax = int(box.ymax*512)
+                sign_class = temp_labels[box.get_label()]
+                sign_score = box.get_score()
+                print(str(filename.split('_')[1]+'_'+filename.split('_')[2]),xmin,xmax,ymin,ymax,sign_class,sign_score)
+                print(os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO',image_path,'output','output.txt'))
+                with open(os.path.join('/flashblade/lars_data/2018_Cyclomedia_panoramas/project_folder/YOLO',image_path,'output','output.txt'),'a') as f:
+                    f.write("%s,%s,%s,%s,%s,%s,%s\n" %(str(filename.split('_')[1]+'_'+filename.split('_')[2]),xmin,xmax,ymin,ymax,sign_class,sign_score))
 if __name__ == '__main__':
     args = argparser.parse_args()
     _main_(args)
